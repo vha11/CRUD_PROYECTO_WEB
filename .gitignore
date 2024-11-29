@@ -1,3 +1,6 @@
 /node_modules
 /coverage
 /build
+
+/src/interface.js
+/src/prueba.js
