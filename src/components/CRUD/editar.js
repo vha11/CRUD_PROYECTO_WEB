@@ -1,42 +1,46 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useHistory } from "react-router-dom";
-import { Form, Button, Container } from "react-bootstrap";
-import axios from "axios";  
+import { useHistory } from "react-router-dom";
+import { Container, Form, Button, Alert, Spinner, ProgressBar } from "react-bootstrap";
+import axios from "axios";
 
-const EditarAudio = () => {
-  const { id } = useParams(); 
+const EditarAudio = ({ audioId }) => {
   const history = useHistory();
-  const [audio, setAudio] = useState(""); 
-  const [archivo, setArchivo] = useState(null); 
-  const [dragging, setDragging] = useState(false); 
-  const [audioToEdit, setAudioToEdit] = useState(null);  
 
+  const [audioData, setAudioData] = useState({ id_audio: "", nombre: "", audio: "" });
+  const [newFile, setNewFile] = useState(null);
+  const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/audios/${id}`)  
-      .then((response) => {
-        setAudioToEdit(response.data);  
-        setAudio(response.data.nombre);  
-        setArchivo(response.data.audio); 
-      })
-      .catch((error) => {
-        console.error("Error al obtener el audio:", error);
-        history.push("/Proyecto");  // Redirigir a la lista de audios si no se encuentra
-      });
-  }, [id, history]);
+    if (audioId) {
+      setLoading(true);
+      axios
+        .get(`/api/audios/${audioId}`)
+        .then((response) => {
+          const { id_audio, nombre, audio } = response.data;
+          setAudioData({ id_audio, nombre, audio });
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching audio data:", error);
+          setAlert({ message: "Error al cargar los datos del audio", type: "danger" });
+          setLoading(false);
+        });
+    }
+  }, [audioId]);
 
-  // Maneja el cambio en el campo de texto del nombre
-  const handleInputChange = (e) => {
-    setAudio(e.target.value);
-  };
-
-  // Maneja la carga del archivo
   const handleFileChange = (e) => {
-    setArchivo(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("audio/")) {
+      setNewFile(file);
+      setAlert({ message: "Archivo cargado correctamente", type: "success" });
+    } else {
+      setAlert({ message: "Por favor, sube un archivo de audio válido", type: "danger" });
+    }
   };
 
-  // Maneja el estado del arrastre del archivo
   const handleDragOver = (e) => {
     e.preventDefault();
     setDragging(true);
@@ -49,90 +53,126 @@ const EditarAudio = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    setArchivo(e.dataTransfer.files[0]);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("audio/")) {
+      setNewFile(file);
+      setAlert({ message: "Archivo cargado correctamente", type: "success" });
+    } else {
+      setAlert({ message: "Por favor, sube un archivo de audio válido", type: "danger" });
+    }
   };
 
-  // Maneja el envío del formulario (actualización del audio)
-  const handleSubmit = (e) => {
+  const handleSave = (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // Crear FormData para enviar tanto el nombre como el archivo
     const formData = new FormData();
-    formData.append("nombre", audio);  // Nombre del audio
-    if (archivo) {
-      formData.append("audio", archivo);  // Archivo de audio (si se modificó)
+    formData.append("nombre", audioData.nombre);
+    if (newFile) {
+      formData.append("audio", newFile); 
     }
 
-    // Realizar la solicitud PUT para actualizar el audio en el servidor
     axios
-      .put(`http://localhost:5000/audios/${id}`, formData)
+      .put(`/api/audios/${audioData.id_audio}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setProgress(percent);
+        },
+      })
       .then((response) => {
-        console.log("Audio actualizado: ", response.data);
-        history.push("/Proyecto");  // Redirigir después de actualizar
+        setAlert({ message: "Audio actualizado correctamente", type: "success" });
+        setLoading(false);
+        setTimeout(() => {
+          history.push("/Proyecto/aministrador"); 
+        }, 2000);
       })
       .catch((error) => {
-        console.error("Error al actualizar el audio:", error);
+        console.error("Error updating audio:", error);
+        setAlert({ message: "Error al actualizar el audio", type: "danger" });
+        setLoading(false);
       });
-
-    // Limpiar los campos después de actualizar
-    setAudio("");
-    setArchivo(null);
   };
 
   return (
     <div className="page-background-Crear">
       <Container className="crear-audio-container-Crear">
         <div className="form-header-Crear">
-          <h2>Convertidor de Audio a Texto</h2>
-          <p>Modificación da datos</p>
+          <h2>Editar Audio</h2>
+          <p>Actualiza los datos del archivo de audio.</p>
         </div>
-        {audioToEdit ? (
-          <Form onSubmit={handleSubmit} className="crear-audio-form-Crear">
-            <div
-              className={`upload-area-Crear ${dragging ? "dragging" : ""}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <Form.Label htmlFor="fileInput" className="upload-label-Crear">
-                {archivo
-                  ? `Archivo seleccionado: ${archivo.name}`
-                  : "Arrastra y suelta tu archivo aquí, o haz clic para seleccionarlo"}
-              </Form.Label>
-              <input
-                id="fileInput"
-                type="file"
-                accept="audio/*"
-                className="file-input-Crear"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
-              <Button
-                variant="primary"
-                className="choose-file-button-Crear"
-                onClick={() => document.getElementById("fileInput").click()}
-              >
-                Subir archivo nuevo
-                <span className="material-icons ButtonIcon">upload</span>
-              </Button>
-            </div>
-            <Form.Group controlId="formAudio" className="input-group-Crear">
-              <Form.Label>Nombre del audio: </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese un nombre descriptivo"
-                value={audio}
-                onChange={handleInputChange}
-                required
-              />
-            </Form.Group>
-            <Button variant="primary" type="submit" className="submit-button-Crear">
-              Guardar Cambios
-            </Button>
-          </Form>
-        ) : (
-          <p>Audio no encontrado</p>
+
+        {/* Mostrar alertas */}
+        {alert && (
+          <Alert variant={alert.type} className="mb-3">
+            {alert.message}
+          </Alert>
         )}
+
+        <Form onSubmit={handleSave} className="crear-audio-form-Crear">
+          <div
+            className={`upload-area-Crear ${dragging ? "dragging" : ""}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <Form.Label htmlFor="fileInput" className="upload-label-Crear">
+              {newFile
+                ? `Archivo cargado: ${newFile.name}`
+                : `Archivo actual: ${audioData.audio}`}
+            </Form.Label>
+            <input
+              id="fileInput"
+              type="file"
+              accept="audio/*"
+              className="file-input-Crear"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <Button
+              variant="primary"
+              className="choose-file-button-Crear"
+              onClick={() => document.getElementById("fileInput").click()}
+            >
+              Elegir archivo
+              <span className="material-icons ButtonIcon">upload</span>
+            </Button>
+          </div>
+
+          <Form.Group controlId="formAudio" className="input-group-Crear">
+            <Form.Label>ID del Audio:</Form.Label>
+            <Form.Control type="text" value={audioData.id_audio} readOnly />
+          </Form.Group>
+
+          <Form.Group controlId="formNombre" className="input-group-Crear">
+            <Form.Label>Nombre del Audio:</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Ingrese un nombre descriptivo"
+              value={audioData.nombre}
+              onChange={(e) => setAudioData({ ...audioData, nombre: e.target.value })}
+              required
+            />
+          </Form.Group>
+
+          {loading && (
+            <div className="progress-container">
+              <ProgressBar now={progress} label={`${progress}%`} />
+            </div>
+          )}
+
+          {loading && !progress && (
+            <div className="spinner-container">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          )}
+
+          <Button variant="primary" type="submit" className="submit-button-Crear">
+            Guardar Cambios
+          </Button>
+        </Form>
       </Container>
     </div>
   );
