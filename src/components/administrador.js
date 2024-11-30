@@ -5,11 +5,12 @@ import axios from "axios";
 
 class Administrador extends Component {
   state = {
-    audios: [], 
-    showAlert: false, 
+    audios: [],
+    showAlert: false,
     alertText: "",
-    showDeleteModal: false, 
-    audioToDelete: null, 
+    showDeleteModal: false,
+    audioToDelete: null,
+    isLoading: false,
   };
 
   componentDidMount() {
@@ -17,9 +18,9 @@ class Administrador extends Component {
   }
 
   fetchAudios = () => {
-    this.setState({ isLoading: true }); 
+    this.setState({ isLoading: true });
     axios
-      .get("http://localhost:5000/audios") 
+      .get("http://localhost:9999/audios")
       .then((response) => {
         this.setState({ audios: response.data, isLoading: false });
         this.showAlertMessage("Datos cargados correctamente.");
@@ -41,7 +42,7 @@ class Administrador extends Component {
     });
     setTimeout(() => {
       this.setState({ showAlert: false });
-    }, 2000); 
+    }, 2000);
   };
 
   handleDeleteModalShow = (id) => {
@@ -56,12 +57,14 @@ class Administrador extends Component {
     if (!audioToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/audios/${audioToDelete}`); 
+      const response = await axios.delete(
+        `http://localhost:9999/audios/${audioToDelete}`
+      );
       this.fetchAudios(); 
       this.setState({ showDeleteModal: false, audioToDelete: null });
       this.showAlertMessage("Audio eliminado correctamente.");
     } catch (error) {
-      console.error("Error al eliminar el audio:", error);
+      console.error("Error al eliminar el audio:", error.response || error);
       this.showAlertMessage("Error al eliminar el audio.");
     }
   };
@@ -73,9 +76,6 @@ class Administrador extends Component {
     });
   };
 
-  handleEdit = (id) => {
-    this.props.history.push(`/Proyecto/Editar/${id}`);
-  };
 
   render() {
     const {
@@ -83,6 +83,7 @@ class Administrador extends Component {
       showAlert,
       alertText,
       showDeleteModal,
+      isLoading,
     } = this.state;
 
     return (
@@ -108,6 +109,9 @@ class Administrador extends Component {
             </Link>
           </Button>
 
+          {isLoading ? (
+            <Spinner animation="border" variant="primary" />
+          ) : (
             <Table striped bordered className="custom-table">
               <thead>
                 <tr>
@@ -123,20 +127,18 @@ class Administrador extends Component {
                       <td>{audio.id_audio}</td>
                       <td>{audio.nombreAudio}</td>
                       <td className="AlignCenter">
-                      <Link to={`/Proyecto/verAudio/${audio.id_audio}`} className="CustomLink">
-                        <Button variant="success" className="ButtonView">
-                          <span className="material-icons ButtonIcon">visibility</span>
-                          Ver audio
-                        </Button>
-                      </Link>
-                        <Button
-                          variant="warning"
-                          className="ButtonEdit"
-                          onClick={() => this.handleEdit(audio.id_audio)}
-                        >
+                        <Link to={`/Proyecto/verAudio/${audio.id_audio}`} className="CustomLink">
+                          <Button variant="success" className="ButtonView">
+                            <span className="material-icons ButtonIcon">visibility</span>
+                            Ver audio
+                          </Button>
+                        </Link>
+                        <Link to={`/Proyecto/editar/${audio.id_audio}`} className="CustomLink">
+                        <Button variant="warning" className="ButtonEdit">
                           <span className="material-icons ButtonIcon">edit</span>
                           Editar
                         </Button>
+                        </Link>
                         <Button
                           variant="danger"
                           className="ButtonDelete"
@@ -145,10 +147,7 @@ class Administrador extends Component {
                           <span className="material-icons ButtonIcon">delete</span>
                           Eliminar
                         </Button>
-                        <Link
-                          to={`/Proyecto/probarAudio/${audio.id_audio}`}
-                          className="CustomLink"
-                        >
+                        <Link to={`/Proyecto/probarAudio/${audio.id_audio}`} className="CustomLink">
                           <Button variant="success" className="ButtonProbar">
                             <span className="material-icons ButtonIcon">tab</span>
                             Probar audio
@@ -166,6 +165,7 @@ class Administrador extends Component {
                 )}
               </tbody>
             </Table>
+          )}
 
           <Modal show={showDeleteModal} onHide={this.handleDeleteCancel}>
             <Modal.Header closeButton>
@@ -178,10 +178,7 @@ class Administrador extends Component {
               <Button variant="secondary" onClick={this.handleDeleteCancel}>
                 Cancelar
               </Button>
-              <Button
-                variant="danger"
-                onClick={this.handleDelete}
-              >
+              <Button variant="danger" onClick={this.handleDelete}>
                 Aceptar
               </Button>
             </Modal.Footer>

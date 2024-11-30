@@ -14,7 +14,7 @@ const App = () => {
       <Switch>
         <Route exact path="/" component={Login} />
         <Route exact path="/Proyecto/administrador" component={Administrador} />
-        <Route exact path="/Proyecto/editar/:id" component={Editar} />
+        <Route exact path="/Proyecto/editar/:audioId" component={Editar} />
         <Route exact path="/Proyecto/verAudio/:audioId" component={VerAudio} />
         <Route exact path="/Proyecto/CrearAudio" component={CrearAudio} />
         <Route path="*" render={() => <h1>RECURSO NO ENCONTRADO</h1>} />

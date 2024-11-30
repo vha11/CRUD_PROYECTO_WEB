@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";  // Importa useParams
+import { useParams } from "react-router-dom"; 
 import axios from "axios";
 import { Container, Form, Button, Alert, Spinner } from "react-bootstrap";
 
@@ -11,20 +11,20 @@ const VerAudio = () => {
 
   useEffect(() => {
     if (audioId) {
-      setLoading(true); // Inicia la carga
+      setLoading(true); 
       axios
-        .get(`http://localhost:5000/audios/${audioId}`)
+        .get(`http://localhost:9999/audios/${audioId}`)
         .then((response) => {
-          setAudioData(response.data); // Establece los datos del audio
-          setLoading(false); // Finaliza la carga
+          setAudioData(response.data); 
+          setLoading(false); 
         })
         .catch((err) => {
           console.error("Error al obtener los datos del audio", err);
           setError("Error al obtener los datos del audio");
-          setLoading(false); // Finaliza la carga incluso si hubo error
+          setLoading(false); 
         });
     }
-  }, [audioId]); // Solo se ejecuta si el audioId cambia
+  }, [audioId]); 
 
   return (
     <div className="page-background-Crear">
@@ -34,14 +34,12 @@ const VerAudio = () => {
           <p>Visualiza los detalles del archivo de audio.</p>
         </div>
 
-        {/* Mostrar alerta si hay un error */}
         {error && (
           <Alert variant="danger" className="mb-3">
             {error}
           </Alert>
         )}
 
-        {/* Si estamos cargando, mostrar el spinner */}
         {loading ? (
           <div className="spinner-container">
             <Spinner animation="border" variant="primary" />
@@ -55,7 +53,6 @@ const VerAudio = () => {
                 </Form.Label>
               </div>
 
-              {/* Mostrar los datos del audio */}
               <Form.Group controlId="formAudio" className="input-group-Crear">
                 <Form.Label>ID del Audio:</Form.Label>
                 <Form.Control type="text" value={audioData.id_audio} readOnly />
