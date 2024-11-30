@@ -88,7 +88,7 @@ class Login extends React.Component {
 
     if (condition) {
       return <Redirect to={`/Proyecto/${tipousuario}`} />;
-    }
+    } //
 
     return (
       <div style={styles}>
