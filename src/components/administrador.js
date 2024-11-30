@@ -121,17 +121,14 @@ class Administrador extends Component {
                   audios.map((audio) => (
                     <tr key={audio.id_audio}>
                       <td>{audio.id_audio}</td>
-                      <td>{audio.nombre}</td>
+                      <td>{audio.nombreAudio}</td>
                       <td className="AlignCenter">
-                        <Link
-                          to={`/Proyecto/verAudio/${audio.id_audio}`}
-                          className="CustomLink"
-                        >
-                          <Button variant="success" className="ButtonView">
-                            <span className="material-icons ButtonIcon">visibility</span>
-                            Ver audio
-                          </Button>
-                        </Link>
+                      <Link to={`/Proyecto/verAudio/${audio.id_audio}`} className="CustomLink">
+                        <Button variant="success" className="ButtonView">
+                          <span className="material-icons ButtonIcon">visibility</span>
+                          Ver audio
+                        </Button>
+                      </Link>
                         <Button
                           variant="warning"
                           className="ButtonEdit"

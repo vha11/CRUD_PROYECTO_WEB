@@ -121,7 +121,7 @@ const EditarAudio = ({ audioId }) => {
             <Form.Label htmlFor="fileInput" className="upload-label-Crear">
               {newFile
                 ? `Archivo cargado: ${newFile.name}`
-                : `Archivo actual: ${audioData.audio}`}
+                : `Archivo actual: ${audioData.archivoMultimedia}`}
             </Form.Label>
             <input
               id="fileInput"
@@ -151,7 +151,7 @@ const EditarAudio = ({ audioId }) => {
             <Form.Control
               type="text"
               placeholder="Ingrese un nombre descriptivo"
-              value={audioData.nombre}
+              value={audioData.nombreAudio}
               onChange={(e) => setAudioData({ ...audioData, nombre: e.target.value })}
               required
             />

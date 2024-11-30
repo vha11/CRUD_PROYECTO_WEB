@@ -1,26 +1,28 @@
 import React, { useState } from "react";
 import { Button, Form, Container, ProgressBar, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
+import { useHistory } from 'react-router-dom';
 
 const CrearAudio = () => {
-  const [audio, setAudio] = useState(""); 
-  const [archivo, setArchivo] = useState(null); 
+  const [nombreAudio, setNombreAudio] = useState(""); 
+  const [archivoMultimedia, setArchivoMultimedia] = useState(null); 
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);  
   const [progress, setProgress] = useState(0); 
   const [error, setError] = useState(null);  
+  const history = useHistory();
 
-  const handleInputChange = (e) => {
-    setAudio(e.target.value);
+  const handleNombreChange = (e) => {
+    setNombreAudio(e.target.value);
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setError(null); 
-    if (selectedFile && selectedFile.type.startsWith('audio/')) {
-      setArchivo(selectedFile);
+    if (selectedFile && selectedFile.type.startsWith("audio/")) {
+      setArchivoMultimedia(selectedFile);
     } else {
-      setError('Por favor selecciona un archivo de audio válido.');
+      setError("Por favor selecciona un archivo de audio válido.");
     }
   };
 
@@ -38,24 +40,24 @@ const CrearAudio = () => {
     setDragging(false);
     const droppedFile = e.dataTransfer.files[0];
     setError(null); 
-    if (droppedFile && droppedFile.type.startsWith('audio/')) {
-      setArchivo(droppedFile);
+    if (droppedFile && droppedFile.type.startsWith("audio/")) {
+      setArchivoMultimedia(droppedFile);
     } else {
-      setError('Por favor selecciona un archivo de audio válido.');
+      setError("Por favor selecciona un archivo de audio válido.");
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
-    if (!archivo) {
+    if (!archivoMultimedia) {
       setError("Por favor, selecciona un archivo de audio.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("archivo", archivo);
-    formData.append("audio", audio);
+    formData.append("nombreAudio", nombreAudio); 
+    formData.append("archivo", archivoMultimedia);
 
     setLoading(true);  
     setProgress(0);  
@@ -72,10 +74,10 @@ const CrearAudio = () => {
       })
       .then((response) => {
         console.log("Audio creado:", response.data);
-        setAudio("");  
-        setArchivo(null);  
+        setNombreAudio("");  
+        setArchivoMultimedia(null);  
         setLoading(false);  
-        navigate("/");  
+        history.push("/Proyecto/administrador");
       })
       .catch((error) => {
         console.error("Error al crear el audio:", error);
@@ -92,7 +94,6 @@ const CrearAudio = () => {
           <p>Sube un archivo de audio.</p>
         </div>
 
-        {/* para mostrar el erro */}
         {error && (
           <Alert variant="danger" className="mb-3">
             {error}
@@ -107,8 +108,8 @@ const CrearAudio = () => {
             onDrop={handleDrop}
           >
             <Form.Label htmlFor="fileInput" className="upload-label-Crear">
-              {archivo
-                ? `Archivo seleccionado: ${archivo.name}`
+              {archivoMultimedia
+                ? `Archivo seleccionado: ${archivoMultimedia.name}`
                 : "Arrastra y suelta tu archivo aquí, o haz clic para seleccionarlo"}
             </Form.Label>
             <input
@@ -129,13 +130,13 @@ const CrearAudio = () => {
             </Button>
           </div>
 
-          <Form.Group controlId="formAudio" className="input-group-Crear">
+          <Form.Group controlId="formNombreAudio" className="input-group-Crear">
             <Form.Label>Nombre del audio: </Form.Label>
             <Form.Control
               type="text"
               placeholder="Ingrese un nombre descriptivo"
-              value={audio}
-              onChange={handleInputChange}
+              value={nombreAudio}
+              onChange={handleNombreChange}
               required
             />
           </Form.Group>

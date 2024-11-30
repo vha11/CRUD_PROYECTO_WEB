@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Alert, Spinner } from "react-bootstrap";
+import { useParams } from "react-router-dom";  // Importa useParams
 import axios from "axios";
+import { Container, Form, Button, Alert, Spinner } from "react-bootstrap";
 
-const ReadAudio = ({ audioId }) => {
-  const [audioData, setAudioData] = useState({ id_audio: "", nombre: "", audio: "" });
-  const [alert, setAlert] = useState(null);
+const VerAudio = () => {
+  const { audioId } = useParams();  // Obtiene el audioId desde la URL
+  const [audioData, setAudioData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (audioId) {
-      setLoading(true);
+      setLoading(true); // Inicia la carga
       axios
         .get(`http://localhost:5000/audios/${audioId}`)
         .then((response) => {
-          const { id_audio, nombre, audio } = response.data;
-          setAudioData({ id_audio, nombre, audio });
-          setLoading(false);
+          setAudioData(response.data); // Establece los datos del audio
+          setLoading(false); // Finaliza la carga
         })
-        .catch((error) => {
-          console.error("Error fetching audio data:", error);
-          setAlert({ message: "Error al cargar los datos del audio", type: "danger" });
-          setLoading(false);
+        .catch((err) => {
+          console.error("Error al obtener los datos del audio", err);
+          setError("Error al obtener los datos del audio");
+          setLoading(false); // Finaliza la carga incluso si hubo error
         });
     }
-  }, [audioId]);
+  }, [audioId]); // Solo se ejecuta si el audioId cambia
 
   return (
     <div className="page-background-Crear">
@@ -33,55 +34,60 @@ const ReadAudio = ({ audioId }) => {
           <p>Visualiza los detalles del archivo de audio.</p>
         </div>
 
-        {alert && (
-          <Alert variant={alert.type} className="mb-3">
-            {alert.message}
+        {/* Mostrar alerta si hay un error */}
+        {error && (
+          <Alert variant="danger" className="mb-3">
+            {error}
           </Alert>
         )}
 
+        {/* Si estamos cargando, mostrar el spinner */}
         {loading ? (
           <div className="spinner-container">
             <Spinner animation="border" variant="primary" />
           </div>
         ) : (
-          <Form className="crear-audio-form-Crear">
-            <div className="upload-area-Crear">
-              <Form.Label htmlFor="fileInput" className="upload-label-Crear">
-                {audioData.audio ? `Archivo actual: ${audioData.audio}` : "No hay archivo de audio"}
-              </Form.Label>
-            </div>
+          audioData && (
+            <Form className="crear-audio-form-Crear">
+              <div className="upload-area-Crear">
+                <Form.Label htmlFor="fileInput" className="upload-label-Crear">
+                  {audioData.archivoMultimedia ? `Archivo actual: ${audioData.archivoMultimedia}` : "No hay archivo de audio"}
+                </Form.Label>
+              </div>
 
-            <Form.Group controlId="formAudio" className="input-group-Crear">
-              <Form.Label>ID del Audio:</Form.Label>
-              <Form.Control type="text" value={audioData.id_audio} readOnly />
-            </Form.Group>
+              {/* Mostrar los datos del audio */}
+              <Form.Group controlId="formAudio" className="input-group-Crear">
+                <Form.Label>ID del Audio:</Form.Label>
+                <Form.Control type="text" value={audioData.id_audio} readOnly />
+              </Form.Group>
 
-            <Form.Group controlId="formNombre" className="input-group-Crear">
-              <Form.Label>Nombre del Audio:</Form.Label>
-              <Form.Control
-                type="text"
-                value={audioData.nombre}
-                readOnly
-              />
-            </Form.Group>
+              <Form.Group controlId="formNombre" className="input-group-Crear">
+                <Form.Label>Nombre del Audio:</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={audioData.nombreAudio}
+                  readOnly
+                />
+              </Form.Group>
 
-            <Form.Group controlId="formAudioFile" className="input-group-Crear">
-              <Form.Label>Archivo de Audio:</Form.Label>
-              <Form.Control
-                type="text"
-                value={audioData.audio}
-                readOnly
-              />
-            </Form.Group>
+              <Form.Group controlId="formAudioFile" className="input-group-Crear">
+                <Form.Label>Archivo de Audio:</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={audioData.archivoMultimedia}
+                  readOnly
+                />
+              </Form.Group>
 
-            <Button variant="secondary" onClick={() => window.history.back()} className="submit-button-Crear">
-              Regresar
-            </Button>
-          </Form>
+              <Button variant="secondary" onClick={() => window.history.back()} className="submit-button-Crear">
+                Regresar
+              </Button>
+            </Form>
+          )
         )}
       </Container>
     </div>
   );
 };
 
-export default ReadAudio;
+export default VerAudio;
